@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.3)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
 
@@ -10,5 +10,4 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Boost CONFIG REQUIRED)
 
-add_executable(toyredis src/main.cpp)
-target_link_libraries(toyredis Boost::headers)
+add_subdirectory(src)
