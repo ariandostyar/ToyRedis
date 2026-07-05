@@ -1,21 +1,14 @@
 #pragma once
 
-#include <string>
-#include <string_view>
+#include "RedisObject.h"
 
-#include "Global.h"
+#include <optional>
+#include <string_view>
 
 class RESP {
 public:
-  static constexpr std::string_view CRLF = "\r\n";
+  static std::optional<RedisObjectPtr> deserialize(std::string_view data);
 
-  RESP();
-  ~RESP();
-
-  static std::string serialize(Global::RESPType type, std::string_view value);
-  static Global::RedisObject deserialize(std::string_view data);
-  static std::string toString(const Global::RedisObject& value);
-  static std::string serializeObject(const Global::RedisObject& value);
 private:
-  static Global::RedisObject deserializeInternal(std::string_view data, size_t& offset);
+  static std::optional<RedisObjectPtr> deserializeInternal(std::string_view data, size_t& offset);
 };

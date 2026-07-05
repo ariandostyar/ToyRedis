@@ -1,5 +1,12 @@
 add_library(toyredis STATIC
   RESP.cpp
+  Redis.cpp
+  RedisString.cpp
+  RedisError.cpp
+  RedisInteger.cpp
+  RedisNull.cpp
+  RedisList.cpp
+  RedisSet.cpp
 )
 
 target_include_directories(toyredis

@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Global.h"
+#include "RedisObject.h"
 
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -11,14 +12,14 @@
 
 class Redis {
 public:
-  void set(const std::string& key, Global::RedisObject value);
-  std::optional<Global::RedisObject> get(const std::string& key) const;
+  void set(const std::string& key, RedisObjectPtr value);
+  std::optional<RedisObjectPtr> get(const std::string& key) const;
   std::string deleteKey(const std::string& key);
   std::string ping(const std::string& customMessage = "") const;
   std::string executeCommand(const std::vector<std::string>& args);
 
 private:
-  std::unordered_map<std::string, Global::RedisObject> store_;
+  std::unordered_map<std::string, RedisObjectPtr> store_;
   static constexpr std::string_view defaultError = "ERR empty command";
   static constexpr std::string_view invalidArgCountError = "ERR wrong number of arguments";
   static constexpr std::string_view commandNotFoundError = "ERR unknown command";

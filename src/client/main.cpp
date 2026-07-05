@@ -40,7 +40,8 @@ int main() {
     asio::write(socket, asio::buffer(request));
 
     const std::string response = readResponse(socket);
-    std::cout << RESP::toString(RESP::deserialize(response)) << "\n";
+    const auto value = RESP::deserialize(response);
+    std::cout << (value ? (*value)->toString() : "(nil)") << "\n";
     // We must flush after each command
     std::cout << host << ":" << port << "> " << std::flush;
   }

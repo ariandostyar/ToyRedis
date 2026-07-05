@@ -1,5 +1,8 @@
 #include "Redis.h"
-#include "RESP.h"
+#include "RedisError.h"
+#include "RedisInteger.h"
+#include "RedisNull.h"
+#include "RedisString.h"
 
 #include <string>
 #include <vector>
@@ -12,13 +15,8 @@ const std::unordered_map<std::string, Redis::Command> Redis::commandRegistry = {
       1,
       [](Redis& redis, const std::vector<std::string>& args)
       {
-        std::string response;
-        if (args.empty()) {
-          response = redis.ping(); 
-        } else {
-          response = redis.ping(args[0]);
-        }
-        return RESP::serialize(Global::RESPType::SimpleString, response);
+        const std::string response = args.empty() ? redis.ping() : redis.ping(args[0]);
+        return std::make_shared<RedisString>(response)->serialize();
       }
     }
   },
@@ -27,10 +25,10 @@ const std::unordered_map<std::string, Redis::Command> Redis::commandRegistry = {
     {
       2,
       2,
-      [](Redis& redis, const std::vector<std::string>& args) 
+      [](Redis& redis, const std::vector<std::string>& args)
       {
-        redis.set(args[0], args[1]);
-        return RESP::serialize(Global::RESPType::SimpleString, "OK");
+        redis.set(args[0], std::make_shared<RedisString>(args[1]));
+        return std::make_shared<RedisString>("OK")->serialize();
       }
     }
   },
@@ -39,10 +37,10 @@ const std::unordered_map<std::string, Redis::Command> Redis::commandRegistry = {
     {
       1,
       1,
-      [](Redis& redis, const std::vector<std::string>& args) 
+      [](Redis& redis, const std::vector<std::string>& args)
       {
         const auto value = redis.get(args[0]);
-        return value ? RESP::serializeObject(*value) : RESP::serialize(Global::RESPType::Null, "");
+        return value ? (*value)->serialize() : std::make_shared<RedisNull>()->serialize();
       }
     }
   },
@@ -51,41 +49,40 @@ const std::unordered_map<std::string, Redis::Command> Redis::commandRegistry = {
     {
       1,
       1,
-      [](Redis& redis, const std::vector<std::string>& args) 
+      [](Redis& redis, const std::vector<std::string>& args)
       {
-        auto deletedCount = redis.deleteKey(args[0]);
-        return RESP::serialize(Global::RESPType::Integer, deletedCount);
+        const auto deletedCount = redis.deleteKey(args[0]);
+        return std::make_shared<RedisInteger>(deletedCount)->serialize();
       }
     }
   },
 };
 
-
 std::string Redis::executeCommand(const std::vector<std::string>& args) {
   if (args.empty()) {
-    return RESP::serialize(Global::RESPType::Error, defaultError);
+    return std::make_shared<RedisError>(std::string(defaultError))->serialize();
   }
 
   const auto it = commandRegistry.find(args[0]);
   if (it == commandRegistry.end()) {
-    return RESP::serialize(Global::RESPType::Error, commandNotFoundError);
+    return std::make_shared<RedisError>(std::string(commandNotFoundError))->serialize();
   }
 
   const size_t argc = args.size() - 1;
   const Command& command = it->second;
   if (argc < command.minArgs || argc > command.maxArgs) {
-    return RESP::serialize(Global::RESPType::Error, invalidArgCountError);
+    return std::make_shared<RedisError>(std::string(invalidArgCountError))->serialize();
   }
 
   const std::vector<std::string> commandArgs(args.begin() + 1, args.end());
   return command.execute(*this, commandArgs);
 }
 
-void Redis::set(const std::string& key, Global::RedisObject value) {
+void Redis::set(const std::string& key, RedisObjectPtr value) {
   store_[key] = std::move(value);
 }
 
-std::optional<Global::RedisObject> Redis::get(const std::string& key) const {
+std::optional<RedisObjectPtr> Redis::get(const std::string& key) const {
   const auto it = store_.find(key);
   if (it == store_.end()) {
     return std::nullopt;
@@ -103,7 +100,7 @@ std::string Redis::deleteKey(const std::string& key) {
 
 std::string Redis::ping(const std::string& customMessage) const {
   if (customMessage.empty()) {
-      return "PONG";
+    return "PONG";
   }
   return customMessage;
 }
