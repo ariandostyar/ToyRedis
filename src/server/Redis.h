@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Global.h"
+
 #include <functional>
 #include <optional>
 #include <string>
@@ -9,12 +11,16 @@
 
 class Redis {
 public:
-  void set(const std::string& key, const std::string& value);
-  std::optional<std::string> get(const std::string& key) const;
+  void set(const std::string& key, Global::RedisObject value);
+  std::optional<Global::RedisObject> get(const std::string& key) const;
   std::string deleteKey(const std::string& key);
   std::string executeCommand(const std::vector<std::string>& args);
 
 private:
+  static constexpr std::string_view defaultError = "ERR empty command";
+  static constexpr std::string_view invalidArgCountError = "ERR wrong number of arguments";
+  static constexpr std::string_view commandNotFoundError = "ERR unknown command";
+
   struct Command {
     size_t minArgs;
     size_t maxArgs;
@@ -23,10 +29,5 @@ private:
 
   static const std::unordered_map<std::string, Command> commandRegistry;
 
-  static constexpr std::string_view defaultError = "ERR empty command";
-  static constexpr std::string_view invalidArgCountError =
-      "ERR wrong number of arguments";
-  static constexpr std::string_view commandNotFoundError = "ERR unknown command";
-
-  std::unordered_map<std::string, std::string> store_;
+  std::unordered_map<std::string, Global::RedisObject> store_;
 };

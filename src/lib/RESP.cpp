@@ -1,49 +1,45 @@
 // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-protocol-description
 
 #include "RESP.h"
-#include "RESPType.h"
+#include <string>
 
 RESP::RESP() {}
 
 RESP::~RESP() {}
 
-std::string RESP::serialize(RESPType type, std::string_view value) {
+std::string RESP::serialize(Global::RESPType type, std::string_view value) {
   std::string op;
 
-  switch (type) 
-  {
-    case RESPType::SimpleString:
+  switch (type) {
+    case Global::RESPType::SimpleString:
       op = "+";
       break;
-    case RESPType::Error:
+    case Global::RESPType::Error:
       op = "-";
-      break;  
-    case RESPType::Integer:
+      break;
+    case Global::RESPType::Integer:
       op = ":";
       break;
+    case Global::RESPType::Array:
+      op = "*";
+      break;
+    case Global::RESPType::Set:
+      op = "~";
+      break;
+    case Global::RESPType::Boolean:
+      op = "#";
+      break;
+    case Global::RESPType::Null:
     default:
-      return "UNKNOWN";
+      return "$-1" + std::string(CRLF);
   }
   return op + std::string(value) + std::string(CRLF);
 }
 
-std::string RESP::deserialize(std::string_view data) {
-  if (data.empty()) {
-    return "";
-  }
+Global::RedisObject RESP::deserialize(std::string_view data) {
+  return "";
+}
 
-  const char firstByte = data[0];
-  std::string_view payload = data.substr(1);
-  if (payload.size() >= 2 && payload.substr(payload.size() - 2) == CRLF) {
-    payload = payload.substr(0, payload.size() - 2);
-  }
-
-  switch (firstByte) {
-    case '+':
-    case '-':
-    case ':':
-      return std::string(payload);
-    default:
-      return "";
-  }
+std::string RESP::toString(const Global::RedisObject& value) {
+  return "OK\r\n";
 }

@@ -29,18 +29,20 @@ int main() {
   std::cout << "Connected to " << host << ":" << port << "\n";
 
   std::string line;
-  std::cout << "> ";
+  std::cout << host << ":" << port << "> ";
   while (std::getline(std::cin, line)) {
     if (line.empty()) {
-      std::cout << "> ";
+      std::cout << host << ":" << port << "> ";
       continue;
     }
 
-    asio::write(socket, asio::buffer(line + "\n"));
+    const std::string request = line + "\n";
+    asio::write(socket, asio::buffer(request));
 
     const std::string response = readResponse(socket);
-    std::cout << RESP::deserialize(response) << "\n";
-    std::cout << "> ";
+    std::cout << RESP::toString(RESP::deserialize(response)) << "\n";
+    // We must flush after each command
+    std::cout << host << ":" << port << "> " << std::flush;
   }
 
   return 0;

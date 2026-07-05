@@ -3,15 +3,16 @@
 #include <string>
 #include <string_view>
 
-#include "RESPType.h"
+#include "Global.h"
 
 class RESP {
+public:
   static constexpr std::string_view CRLF = "\r\n";
 
-public:
   RESP();
   ~RESP();
 
-  static std::string serialize(RESPType type, std::string_view value);
-  static std::string deserialize(std::string_view data);
+  static std::string serialize(Global::RESPType type, std::string_view value);
+  static Global::RedisObject deserialize(std::string_view data);
+  static std::string toString(const Global::RedisObject& value);
 };
