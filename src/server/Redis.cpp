@@ -5,27 +5,59 @@
 #include <vector>
 
 const std::unordered_map<std::string, Redis::Command> Redis::commandRegistry = {
-    {"SET",
-     {2,
+  {
+    "PING",
+    {
+      0,
+      1,
+      [](Redis& redis, const std::vector<std::string>& args)
+      {
+        std::string response;
+        if (args.empty()) {
+          response = redis.ping(); 
+        } else {
+          response = redis.ping(args[0]);
+        }
+        return RESP::serialize(Global::RESPType::SimpleString, response);
+      }
+    }
+  },
+  {
+    "SET",
+    {
       2,
-      [](Redis& redis, const std::vector<std::string>& args) {
+      2,
+      [](Redis& redis, const std::vector<std::string>& args) 
+      {
         redis.set(args[0], args[1]);
         return RESP::serialize(Global::RESPType::SimpleString, "OK");
-      }}},
-    {"GET",
-     {1,
+      }
+    }
+  },
+  {
+    "GET",
+    {
       1,
-      [](Redis& redis, const std::vector<std::string>& args) {
+      1,
+      [](Redis& redis, const std::vector<std::string>& args) 
+      {
         const auto value = redis.get(args[0]);
         return value ? RESP::toString(*value) : RESP::serialize(Global::RESPType::Null, "");
-      }}},
-    {"DEL",
-     {1,
+      }
+    }
+  },
+  {
+    "DEL",
+    {
       1,
-      [](Redis& redis, const std::vector<std::string>& args) {
+      1,
+      [](Redis& redis, const std::vector<std::string>& args) 
+      {
         auto deletedCount = redis.deleteKey(args[0]);
         return RESP::serialize(Global::RESPType::Integer, deletedCount);
-      }}},
+      }
+    }
+  },
 };
 
 
@@ -71,4 +103,11 @@ std::string Redis::deleteKey(const std::string& key) {
   }
   store_.erase(key);
   return "1";
+}
+
+std::string Redis::ping(const std::string& customMessage) const {
+  if (customMessage.empty()) {
+      return "PONG";
+  }
+  return customMessage;
 }

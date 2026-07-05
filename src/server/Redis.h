@@ -14,6 +14,7 @@ public:
   void set(const std::string& key, Global::RedisObject value);
   std::optional<Global::RedisObject> get(const std::string& key) const;
   std::string deleteKey(const std::string& key);
+  std::string ping(const std::string& customMessage = "") const;
   std::string executeCommand(const std::vector<std::string>& args);
 
 private:
