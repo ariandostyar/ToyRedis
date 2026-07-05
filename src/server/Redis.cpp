@@ -42,7 +42,7 @@ const std::unordered_map<std::string, Redis::Command> Redis::commandRegistry = {
       [](Redis& redis, const std::vector<std::string>& args) 
       {
         const auto value = redis.get(args[0]);
-        return value ? RESP::toString(*value) : RESP::serialize(Global::RESPType::Null, "");
+        return value ? RESP::serializeObject(*value) : RESP::serialize(Global::RESPType::Null, "");
       }
     }
   },
@@ -90,11 +90,7 @@ std::optional<Global::RedisObject> Redis::get(const std::string& key) const {
   if (it == store_.end()) {
     return std::nullopt;
   }
-  
-  if (std::get_if<std::string>(&it->second)) {
-    return it->second;
-  }
-  return std::nullopt;
+  return it->second;
 }
 
 std::string Redis::deleteKey(const std::string& key) {

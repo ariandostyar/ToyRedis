@@ -18,6 +18,7 @@ public:
   std::string executeCommand(const std::vector<std::string>& args);
 
 private:
+  std::unordered_map<std::string, Global::RedisObject> store_;
   static constexpr std::string_view defaultError = "ERR empty command";
   static constexpr std::string_view invalidArgCountError = "ERR wrong number of arguments";
   static constexpr std::string_view commandNotFoundError = "ERR unknown command";
@@ -29,6 +30,4 @@ private:
   };
 
   static const std::unordered_map<std::string, Command> commandRegistry;
-
-  std::unordered_map<std::string, Global::RedisObject> store_;
 };

@@ -15,4 +15,7 @@ public:
   static std::string serialize(Global::RESPType type, std::string_view value);
   static Global::RedisObject deserialize(std::string_view data);
   static std::string toString(const Global::RedisObject& value);
+  static std::string serializeObject(const Global::RedisObject& value);
+private:
+  static Global::RedisObject deserializeInternal(std::string_view data, size_t& offset);
 };
