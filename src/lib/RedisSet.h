@@ -13,6 +13,9 @@ public:
   const std::vector<RedisObjectPtr>& elements() const { return elements_; }
 
   bool insert(RedisObjectPtr element);
+  bool remove(const std::string& member);
+  bool contains(const std::string& member) const;
+  size_t size() const { return elements_.size(); }
 
   std::string serialize() const override;
   std::string toString() const override;

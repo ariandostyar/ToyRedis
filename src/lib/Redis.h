@@ -17,7 +17,7 @@ public:
   std::string deleteKey(const std::string& key);
   std::string ping(const std::string& customMessage = "") const;
   std::string executeCommand(const std::vector<std::string>& args);
-
+  void flushAll();
 private:
   std::unordered_map<std::string, RedisObjectPtr> store_;
   static constexpr std::string_view defaultError = "ERR empty command";

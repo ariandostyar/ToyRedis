@@ -14,6 +14,25 @@ bool RedisSet::insert(RedisObjectPtr element) {
   return true;
 }
 
+bool RedisSet::remove(const std::string& member) {
+  for (auto it = elements_.begin(); it != elements_.end(); it++) {
+    if ((*it)->toString() == member) {
+      elements_.erase(it);
+      return true;
+    }
+  }
+  return false;
+}
+
+bool RedisSet::contains(const std::string& member) const {
+  for (const auto& existing : elements_) {
+    if (existing->toString() == member) {
+      return true;
+    }
+  }
+  return false;
+}
+
 std::string RedisSet::serialize() const {
   std::string result = "~" + std::to_string(elements_.size()) + std::string(CRLF);
   for (const auto& element : elements_) {

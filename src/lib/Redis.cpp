@@ -56,6 +56,18 @@ const std::unordered_map<std::string, Redis::Command> Redis::commandRegistry = {
       }
     }
   },
+  {
+    "FLUSHALL",
+    {
+      0,
+      0,
+      [](Redis& redis, const std::vector<std::string>& args)
+      {
+        redis.flushAll();
+        return std::make_shared<RedisString>("OK")->serialize();
+      }
+    }
+  },
 };
 
 std::string Redis::executeCommand(const std::vector<std::string>& args) {
@@ -103,4 +115,8 @@ std::string Redis::ping(const std::string& customMessage) const {
     return "PONG";
   }
   return customMessage;
+}
+
+void Redis::flushAll() {
+  store_.clear();
 }
