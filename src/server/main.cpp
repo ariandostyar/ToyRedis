@@ -1,56 +1,51 @@
 #include "Global.h"
 #include "Redis.h"
+#include "Session.h"
 
 #include <boost/asio.hpp>
 #include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <memory>
 
 namespace asio = boost::asio;
 using tcp = asio::ip::tcp;
 
-std::vector<std::string> parseCommand(const std::string& line) {
-  std::vector<std::string> args;
-  std::istringstream input(line);
-  std::string token;
-  while (input >> token) {
-    args.push_back(token);
+class Server {
+public:
+  Server(asio::io_context& io, std::uint16_t port)
+      : acceptor_(io, tcp::endpoint{tcp::v4(), port}) {
+    doAccept();
   }
-  return args;
-}
+
+private:
+  void doAccept() {
+    acceptor_.async_accept(
+        [this](const boost::system::error_code& error, tcp::socket socket) {
+          if (!error) {
+            std::make_shared<Session>(std::move(socket), redis_)->start();
+          } else {
+            std::cerr << "Accept error: " << error.message() << "\n";
+          }
+          doAccept();
+        });
+  }
+
+  tcp::acceptor acceptor_;
+  Redis redis_;
+};
 
 int main() {
-  asio::io_context io;
+  try {
+    asio::io_context io;
+    Server server{io, Global::REDIS_PORT};
 
-  tcp::acceptor acceptor{io, tcp::endpoint{tcp::v4(), Global::REDIS_PORT}};
-  Redis redis;
+    std::cout << "ToyRedis listening on " << Global::REDIS_HOST << ":"
+              << Global::REDIS_PORT << " (async / epoll)\n";
 
-  std::cout << "ToyRedis listening on " << Global::REDIS_HOST << ":" << Global::REDIS_PORT << "\n";
-
-  for (;;) {
-    tcp::socket socket{io};
-    acceptor.accept(socket);
-    std::cout << "New connection\n";
-
-    try {
-      for (;;) {
-        asio::streambuf buffer;
-        asio::read_until(socket, buffer, "\n");
-        std::istream input(&buffer);
-        std::string line;
-        std::getline(input, line);
-
-        const auto args = parseCommand(line);
-        if (args.empty()) {
-          continue;
-        }
-
-        const std::string reply = redis.executeCommand(args);
-        asio::write(socket, asio::buffer(reply));
-      }
-    } catch (const std::exception& error) {
-      std::cerr << "Connection error: " << error.what() << "\n";
-    }
+    io.run();
+  } catch (const std::exception& error) {
+    std::cerr << "Server error: " << error.what() << "\n";
+    return 1;
   }
+
+  return 0;
 }
